@@ -87,11 +87,6 @@
 
 <body>
 
-<!-- 🔒 Netlify hidden form -->
-<form name="valentine-answers" method="POST" data-netlify="true" hidden>
-  <input type="hidden" name="answers" id="answersField">
-</form>
-
 <div class="card" id="card">
   <h1>Hey My Love 💕</h1>
   <p>I have something special to ask you…</p>
@@ -101,6 +96,22 @@
     <button class="primary" onclick="startQuiz()">YES 💖</button>
   </div>
 </div>
+
+<!-- ✅ SINGLE Netlify Form (DO NOT DUPLICATE) -->
+<form
+  name="valentine-answers"
+  method="POST"
+  data-netlify="true"
+  data-netlify-honeypot="bot-field"
+  style="display:none"
+>
+  <input type="hidden" name="form-name" value="valentine-answers" />
+  <input type="hidden" name="answers" id="answersField" />
+
+  <p>
+    <label>Don’t fill this out: <input name="bot-field" /></label>
+  </p>
+</form>
 
 <script>
   const questions = [
@@ -175,12 +186,15 @@
   }
 
   function submitToNetlify() {
-    const field = document.getElementById("answersField");
-    field.value = answers.map((a, i) => `Q${i+1}: ${a}`).join("\n");
+    const data = {
+      "form-name": "valentine-answers",
+      answers: answers.map((a, i) => `Q${i + 1}: ${a}`).join("\n")
+    };
 
     fetch("/", {
       method: "POST",
-      body: new FormData(document.forms[0])
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams(data).toString()
     });
   }
 
@@ -195,7 +209,7 @@
         that I couldn’t meet you much 🫂<br><br>
 
         We will overcome this,<br>
-        together ❤️<br><br>
+        together ❤️
       </p>
     `;
   }
@@ -212,7 +226,7 @@
     `;
   }
 
-  // Floating hearts (soft background)
+  // Floating hearts
   setInterval(() => {
     const heart = document.createElement("div");
     heart.className = "heart";
