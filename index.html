@@ -1,125 +1,228 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Be My Valentine 💖</title>
+
   <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
-      margin: 0;
       height: 100vh;
       background: linear-gradient(135deg, #ff9a9e, #fad0c4);
       display: flex;
       justify-content: center;
       align-items: center;
-      font-family: 'Comic Sans MS', cursive, sans-serif;
+      font-family: "Poppins", sans-serif;
       overflow: hidden;
     }
 
     .card {
       background: white;
-      padding: 40px;
-      border-radius: 25px;
+      padding: 30px;
+      border-radius: 24px;
       text-align: center;
       box-shadow: 0 15px 40px rgba(0,0,0,0.2);
-      max-width: 350px;
+      width: 90%;
+      max-width: 380px;
+      animation: pop 0.6s ease;
       z-index: 1;
     }
 
-    h1 {
-      color: #ff4d6d;
-      font-size: 2em;
+    @keyframes pop {
+      from { transform: scale(0.85); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
     }
 
-    p {
-      color: #555;
-      font-size: 1.1em;
+    h1 { color: #ff4d6d; font-size: clamp(1.7rem,5vw,2.3rem); }
+    h2 { margin: 15px 0; font-size: clamp(1.2rem,4vw,1.6rem); }
+    p  { color: #555; font-size: clamp(1rem,3.5vw,1.1rem); line-height: 1.6; }
+
+    .buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 15px;
     }
 
     button {
-      padding: 12px 25px;
+      padding: 14px;
       border-radius: 30px;
       border: none;
-      font-size: 1em;
+      font-size: 1rem;
       cursor: pointer;
-      margin: 10px;
-      transition: 0.3s;
+      background: #ffe3e8;
     }
 
-    #yes {
+    .primary {
       background: #ff4d6d;
       color: white;
     }
 
-    #no {
-      background: #ddd;
-      position: absolute;
+    textarea {
+      width: 100%;
+      margin-top: 10px;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid #ddd;
+      font-size: 0.95rem;
+      resize: none;
     }
 
     .heart {
       position: absolute;
       color: #ff4d6d;
-      font-size: 20px;
-      animation: float 5s infinite ease-in;
+      animation: float 5s linear infinite;
       opacity: 0.6;
+      pointer-events: none;
     }
 
     @keyframes float {
-      0% {
-        transform: translateY(100vh) scale(0.8);
-      }
-      100% {
-        transform: translateY(-10vh) scale(1.2);
-      }
+      from { transform: translateY(100vh); }
+      to { transform: translateY(-10vh); }
     }
   </style>
 </head>
+
 <body>
 
-  <div class="card">
-    <h1>Hey My Love 💕</h1>
-    <p>
-      Every day feels sweeter with you…  
-      So I have a very important question 👀
-    </p>
-    <h2>Will you be my Valentine? 💘</h2>
+<!-- 🔒 Netlify hidden form -->
+<form name="valentine-answers" method="POST" data-netlify="true" hidden>
+  <input type="hidden" name="answers" id="answersField">
+</form>
 
-    <button id="yes" onclick="yesClicked()">YES 💖</button>
-    <button id="no" onmouseover="moveNo()">NO 😜</button>
+<div class="card" id="card">
+  <h1>Hey My Love 💕</h1>
+  <p>I have something special to ask you…</p>
+  <h2>Will you be my Valentine? 💘</h2>
+
+  <div class="buttons">
+    <button class="primary" onclick="startQuiz()">YES 💖</button>
   </div>
+</div>
 
-  <script>
-    function yesClicked() {
-      document.body.innerHTML = `
-        <div class="card">
-          <h1>YAYYY 💞</h1>
-          <p>
-            You just made my heart the happiest ❤️<br><br>
-            Happy Valentine’s Day, my Valentine 💐
-          </p>
-        </div>
-      `;
+<script>
+  const questions = [
+    {
+      text: "What do you love the most about me?",
+      options: ["Your smile 😊", "Your heart ❤️", "The way you care 💕", "Everything about you ✨"]
+    },
+    {
+      text: "What’s your favorite memory of me?",
+      options: ["Our first conversation 💬", "That special moment 💫", "Every laugh together 😄", "All memories with you ❤️"]
+    },
+    {
+      text: "What do you hate about me?",
+      options: [
+        "That you overthink 🥺",
+        "That you doubt yourself 💔",
+        "That you don’t see how amazing you are ✨",
+        "Nothing at all ❤️"
+      ]
+    },
+    {
+      text: "What do you think is my most unique quality?",
+      options: ["Your kindness 💖", "Your honesty 🤍", "Your strength 💪", "Your soul ✨"]
+    },
+    {
+      text: "What am I to you?",
+      options: ["Someone special 💫", "My safe place 🫂", "My favorite person ❤️", "My Valentine 💖"]
     }
+  ];
 
-    function moveNo() {
-      const noBtn = document.getElementById("no");
-      const x = Math.random() * (window.innerWidth - 100);
-      const y = Math.random() * (window.innerHeight - 50);
-      noBtn.style.left = x + "px";
-      noBtn.style.top = y + "px";
+  let index = 0;
+  const answers = [];
+
+  function startQuiz() {
+    showQuestion();
+  }
+
+  function showQuestion() {
+    const q = questions[index];
+    document.getElementById("card").innerHTML = `
+      <p>${q.text}</p>
+      <div class="buttons">
+        ${q.options.map(opt =>
+          `<button onclick="saveAnswer('${opt.replace(/'/g, "\\'")}')">${opt}</button>`
+        ).join("")}
+        <textarea id="customAnswer" placeholder="Or write your own… 💌"></textarea>
+        <button class="primary" onclick="saveTextAnswer()">Next ➜</button>
+      </div>
+    `;
+  }
+
+  function saveAnswer(answer) {
+    answers.push(answer);
+    next();
+  }
+
+  function saveTextAnswer() {
+    const text = document.getElementById("customAnswer").value;
+    answers.push(text || "(No written answer)");
+    next();
+  }
+
+  function next() {
+    index++;
+    if (index < questions.length) {
+      showQuestion();
+    } else {
+      submitToNetlify();
+      showFinal();
+      setTimeout(showReassurance, 10000);
     }
+  }
 
-    // Floating hearts
-    setInterval(() => {
-      const heart = document.createElement("div");
-      heart.className = "heart";
-      heart.innerHTML = "❤️";
-      heart.style.left = Math.random() * 100 + "vw";
-      heart.style.fontSize = (Math.random() * 20 + 15) + "px";
-      document.body.appendChild(heart);
+  function submitToNetlify() {
+    const field = document.getElementById("answersField");
+    field.value = answers.map((a, i) => `Q${i+1}: ${a}`).join("\n");
 
-      setTimeout(() => heart.remove(), 5000);
-    }, 300);
-  </script>
+    fetch("/", {
+      method: "POST",
+      body: new FormData(document.forms[0])
+    });
+  }
+
+  function showFinal() {
+    document.getElementById("card").innerHTML = `
+      <h1>Always Us 💖</h1>
+      <p>
+        It’s okay if we have bad days…<br>
+        just don’t forget our good days 🌸<br><br>
+
+        And please don’t feel bad<br>
+        that I couldn’t meet you much 🫂<br><br>
+
+        We will overcome this,<br>
+        together ❤️<br><br>
+      </p>
+    `;
+  }
+
+  function showReassurance() {
+    document.getElementById("card").innerHTML = `
+      <h1>Always 🌸</h1>
+      <p>
+        No matter how today looks,<br>
+        remember this moment.<br><br>
+        I’m here.<br>
+        We’re okay. ❤️
+      </p>
+    `;
+  }
+
+  // Floating hearts (soft background)
+  setInterval(() => {
+    const heart = document.createElement("div");
+    heart.className = "heart";
+    heart.innerHTML = "❤️";
+    heart.style.left = Math.random() * 100 + "vw";
+    heart.style.fontSize = (Math.random() * 15 + 12) + "px";
+    document.body.appendChild(heart);
+    setTimeout(() => heart.remove(), 4000);
+  }, 500);
+</script>
 
 </body>
 </html>
